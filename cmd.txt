@@ -1,0 +1,13 @@
+
+starting with 
+https://github.com/BeautifulBeer/MobileNetV3/blob/main/MobileNetV3.ipynb
+
+First block needs more - but all installed in pytorch virtualenv:
+pip install torch
+pip install torchvision
+pip install pytorch-model-summary
+pip install pandas
+pip install numpy
+pip install matplotlib
+
+pyenv activate pytorch
