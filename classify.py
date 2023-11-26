@@ -185,14 +185,10 @@ def training(model, datasets, datasets_size, optimizer, scheduler, epochs=10):
             epoch_losses = 0.0
             
             if phase == 'train':
-                print(" about to train ")
                 model.train()
-                print(" done train ")
                 
             if phase == 'valid':
-                print(" about to valid")
                 model.eval()
-                print(" done valid")
                 
             for data in datasets[phase]:
                 # Init weights for each batch dataset
@@ -203,7 +199,6 @@ def training(model, datasets, datasets_size, optimizer, scheduler, epochs=10):
                 # to use nll_loss, labels should be LongTensor
                 labels = labels.type(torch.LongTensor)
                 if torch.cuda.is_available():
-                    print("never here, right?")
                     inputs, labels = inputs.cuda(), labels.cuda()
                 
                 output = model(inputs)
@@ -229,16 +224,14 @@ def training(model, datasets, datasets_size, optimizer, scheduler, epochs=10):
                     torch.save(model.state_dict(), 'final_model.pth')
                 validation_loss.append(epoch_losses)
         
-        print(" about to step ")
         scheduler.step()
-        print (" stepped ")
     return training_loss, validation_loss
 
 
 def testing(model, dataset):
     result = []
     if torch.cuda.is_available():
-            model.cuda()
+        model.cuda()
     for data in dataset:
         inputs, labels = data
         if torch.cuda.is_available():
@@ -262,7 +255,10 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=
 
 dummy_input = torch.zeros(batch_size, inputDim, 28, 28)
 print(pytorch_model_summary.summary(model, dummy_input))
-     
+
+if torch.cuda.is_available():
+    model = model.cuda()
+
 transforms = torchvision.transforms.Compose([
     torchvision.transforms.ToPILImage(),
     torchvision.transforms.Resize((28, 28)),
@@ -304,7 +300,15 @@ train_loss, valid_loss = training(model, datasets, datasets_size, optimizer, sch
 
 # Draw loss graph for training
 epoch_x = range(1, epochs + 1)
-plt.plot(epoch_x, train_loss, 'r', epoch_x, valid_loss, 'b')
+
+if torch.cuda.is_available():
+    train_loss_cpu = [loss.item() for loss in train_loss]
+    valid_loss_cpu = [loss.item() for loss in valid_loss]
+else:
+    train_loss_cpu = train_loss
+    valid_loss_cpu = valid_loss
+
+plt.plot(epoch_x, train_loss_cpu, 'r', epoch_x, valid_loss_cpu, 'b')
 plt.xlabel('epochs')
 plt.ylabel('loss')
 plt.show()
@@ -323,3 +327,14 @@ test_data_loader = DataLoader(
 )
 
 result = testing(model, test_data_loader)
+
+# Load best model
+model = MobileNetV3(inputDim, outDim)
+model.load_state_dict(torch.load('final_model.pth'))
+
+if torch.cuda.is_available():
+    model = model.cuda()
+
+# Test the model
+result = testing(model, test_data_loader)
+

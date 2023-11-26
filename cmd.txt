@@ -11,3 +11,9 @@ pip install numpy
 pip install matplotlib
 
 pyenv activate pytorch
+
+# on windows
+source pytorch/Scripts/activate
+
+## install pytorch 2.1.1 with CUDA 12.3 (note, really asking for 12.1 - but it works
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
